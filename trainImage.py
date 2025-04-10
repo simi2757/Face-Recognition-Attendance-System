@@ -11,14 +11,64 @@ from PIL import Image, ImageTk
 
 # # Train Image
 def TrainImage(haarcasecade_path, trainimage_path, trainimagelabel_path, message,text_to_speech):
-    recognizer = cv2.face.LBPHFaceRecognizer_create()
-    detector = cv2.CascadeClassifier(haarcasecade_path)
-    faces, Id = getImagesAndLables(trainimage_path)
-    recognizer.train(faces, np.array(Id))
-    recognizer.save(trainimagelabel_path)
-    res = "Image Trained successfully"  # +",".join(str(f) for f in Id)
-    message.configure(text=res)
-    text_to_speech(res)
+    """
+    Train the face recognition model using images stored in trainimage_path.
+    """
+    try:
+        print(f"Starting image training with:")
+        print(f"- Haarcascade path: {haarcasecade_path}")
+        print(f"- Training image path: {trainimage_path}")
+        print(f"- Training label path: {trainimagelabel_path}")
+        
+        # Check if haarcascade file exists
+        if not os.path.exists(haarcasecade_path):
+            error_msg = f"Haarcascade file not found: {haarcasecade_path}"
+            print(error_msg)
+            message.configure(text=error_msg)
+            text_to_speech(error_msg)
+            return
+            
+        # Check if training directory exists
+        if not os.path.exists(trainimage_path):
+            error_msg = f"Training directory not found: {trainimage_path}"
+            print(error_msg)
+            message.configure(text=error_msg)
+            text_to_speech(error_msg)
+            return
+            
+        # Create recognizer and detector
+        recognizer = cv2.face.LBPHFaceRecognizer_create()
+        detector = cv2.CascadeClassifier(haarcasecade_path)
+        
+        # Get faces and IDs
+        faces, Ids = getImagesAndLables(trainimage_path)
+        
+        if not faces or not Ids:
+            error_msg = "No valid images found for training!"
+            print(error_msg)
+            message.configure(text=error_msg)
+            text_to_speech(error_msg)
+            return
+            
+        # Train the recognizer
+        print(f"Training recognizer with {len(faces)} images...")
+        recognizer.train(faces, np.array(Ids))
+        
+        # Save the trained model
+        print(f"Saving trained model to {trainimagelabel_path}...")
+        recognizer.save(trainimagelabel_path)
+        
+        # Success message
+        success_msg = f"Image Training Successful! Processed {len(faces)} images."
+        print(success_msg)
+        message.configure(text=success_msg)
+        text_to_speech(success_msg)
+        
+    except Exception as e:
+        error_msg = f"Error during training: {str(e)}"
+        print(error_msg)
+        message.configure(text=error_msg)
+        text_to_speech(error_msg)
 
 
 # def getImagesAndLables(path):
@@ -95,13 +145,21 @@ def getImagesAndLables(path):
                 pilImage = Image.open(img_path).convert("L")
                 imageNp = np.array(pilImage, "uint8")
 
-                # Extract ID from filename (assuming format: ID_Name_XX.jpg)
-                Id = int(os.path.split(img_path)[-1].split("_")[1])
+                # Extract ID from filename (format: Name_ID_XX.jpg)
+                # For example: Simi_26_50.jpg -> ID is 26
+                filename_parts = os.path.basename(img_path).split("_")
+                if len(filename_parts) >= 2:
+                    Id = int(filename_parts[1])
+                else:
+                    print(f"Invalid filename format: {img_path}")
+                    continue
 
                 faces.append(imageNp)
                 Ids.append(Id)
+                print(f"Processed image: {img_path} with ID: {Id}")
 
             except Exception as e:
                 print(f"Skipping invalid file: {img_path} | Error: {e}")
 
+    print(f"Total images processed: {len(faces)}")
     return faces, Ids

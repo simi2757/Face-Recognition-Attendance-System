@@ -14,11 +14,15 @@ trainimagelabel_path = "TrainingImageLabel/Trainner.yml"
 studentdetail_path = "StudentDetails/studentdetails.csv"
 attendance_path = "Attendance"
 
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({'message': 'Welcome to the Attendance API'}), 200
+
 @app.route('/attendance', methods=['POST'])
 def fill_attendance():
     try:
         data = request.json
-        subject = data.get('subject')
+        subject = data.get('subject', 'Math')  # Default subject to "Math" if not provided
         if not subject:
             return jsonify({'error': 'Subject is required'}), 400
 
