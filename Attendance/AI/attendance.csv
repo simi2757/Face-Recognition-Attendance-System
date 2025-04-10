@@ -1,2 +1,5 @@
-Enrollment,Name,2025-04-08,Attendance
-26,['Simi'],1,100%
+Enrollment,Name,2025-04-08,2025-04-10,Attendance
+0,['o'],0.0,1.0,50%
+4,['Cartoon'],0.0,1.0,50%
+12,['p'],0.0,1.0,50%
+26,['Simi'],1.0,0.0,50%
